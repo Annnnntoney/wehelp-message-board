@@ -2,7 +2,7 @@
 
 > 給完全沒碰過後端和 AWS 的人。照順序做，每一步都寫了「打什麼、點哪裡、應該看到什麼」。
 > 本文程式碼都實際跑過：Ruff 檢查、11 個測試全過；本機模擬模式實際發文成功；Docker image 用 `linux/amd64` 建置並實際啟動、上傳成功。
-> **AWS、Cloudflare、GitHub、Docker Hub 的畫面需要登入你的帳號才看得到，我沒有替你登入操作。** 那些步驟我寫清楚每一個按鈕，並附上官方文件連結（官方文件裡有截圖）。AWS 介面常改版，按鈕名稱跟這裡不完全一樣時，以官方文件為準。
+> AWS、Cloudflare、GitHub、Docker Hub 的後台步驟會寫出每一個要點的按鈕，並附上官方文件連結（官方文件裡有截圖）。AWS 介面常改版，按鈕名稱跟這裡不完全一樣時，以官方文件為準。
 
 ---
 
@@ -146,7 +146,7 @@ docker run --rm hello-world
 
 ### 3.1 建立專案環境
 
-> 如果你用之前建好的 `backend/` 資料夾，裡面已經有 Dockerfile、CI 設定和 `/healthz`。下面照做會把檔案補齊或覆蓋成完整版本。
+> 如果你是 clone 這個 repo，裡面已經有 Dockerfile、CI 設定和 `/healthz`。下面照做會把檔案補齊成完整版本。
 
 ```bash
 cd ~/Desktop/wehelp-frontend/backend   # 換成你的路徑
