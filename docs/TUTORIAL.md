@@ -1,7 +1,7 @@
 # 零基礎教學：FastAPI 圖文留言板 × AWS（S3、CloudFront、RDS、EC2）× Docker × 自動部署
 
 > 給完全沒碰過後端和 AWS 的人。照順序做，每一步都寫了「打什麼、點哪裡、應該看到什麼」。
-> 本文程式碼都實際跑過：Ruff 檢查、11 個測試全過；本機模擬模式實際發文成功；Docker image 用 `linux/amd64` 建置並實際啟動、上傳成功。
+> 本文程式碼都實際跑過：Ruff 檢查、13 個測試全過；本機模擬模式實際發文成功；Docker image 用 `linux/amd64` 建置並實際啟動、上傳成功。
 > AWS、Cloudflare、GitHub、Docker Hub 的後台步驟會寫出每一個要點的按鈕，並附上官方文件連結（官方文件裡有截圖）。AWS 介面常改版，按鈕名稱跟這裡不完全一樣時，以官方文件為準。
 
 ---
@@ -296,8 +296,13 @@ def get_settings() -> Settings:
 ### 4.2 錯誤格式：`app/errors.py`
 
 ```python
+import logging
+
 from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 class AppError(Exception):
@@ -309,14 +314,32 @@ class AppError(Exception):
         self.message = message
 
 
+def error_response(status_code: int, error: str, message: str) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"error": error, "message": message})
+
+
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.error, "message": exc.message},
-    )
+    return error_response(exc.status_code, exc.error, exc.message)
+
+
+async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    # FastAPI 預設回 422 + detail，統一改成跟其他錯誤一樣的格式
+    return error_response(400, "invalid_request", "送出的資料格式不正確")
+
+
+async def unexpected_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    # 沒預料到的錯誤（例如資料庫掛了）：細節只寫進 log，使用者只看到通用訊息
+    logger.exception("Unhandled error", exc_info=exc)
+    return error_response(500, "internal_error", "伺服器發生錯誤，請稍後再試")
 ```
 
-所有錯誤都回傳一樣的格式 `{"error": "代碼", "message": "給人看的訊息"}`，前端只要寫一種處理方式。程式任何地方 `raise AppError(...)`，FastAPI 就會用 `app_error_handler` 轉成 JSON 回應。
+所有錯誤都回傳一樣的格式 `{"error": "代碼", "message": "給人看的訊息"}`，前端只要寫一種處理方式。三個處理器各管一種情況：
+
+| 處理器 | 什麼時候用到 |
+|---|---|
+| `app_error_handler` | 我們自己 `raise AppError(...)`，例如圖片太大 |
+| `validation_error_handler` | 請求格式根本不對（例如 `image` 送的是文字不是檔案），FastAPI 預設會回 422，這裡統一改成 400 |
+| `unexpected_error_handler` | 沒預料到的錯誤，例如資料庫掛了。細節寫進 log，使用者只看到通用訊息 |
 
 ### 4.3 資料庫：`app/database.py`
 
@@ -569,13 +592,21 @@ def create_message(
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
-from app.errors import AppError, app_error_handler
+from app.errors import (
+    AppError,
+    app_error_handler,
+    unexpected_error_handler,
+    validation_error_handler,
+)
 from app.messages import router as messages_router
 
 app = FastAPI(title="message-board")
 app.add_exception_handler(AppError, app_error_handler)
+app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(Exception, unexpected_error_handler)
 app.include_router(messages_router)
 
 
@@ -590,6 +621,7 @@ app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True
 ```
 
 - `/healthz`：一支最簡單的 API，用來確認「程式活著」。部署後第一件事就是打它。
+- `add_exception_handler`：註冊 §4.2 的三個錯誤處理器。有了 `Exception` 那一個，任何路由出現沒預料到的錯誤，都會回傳統一格式，不用每支 API 各自 try/except。
 - 網頁（`static/`）和 API 由同一個 FastAPI 提供，同一個網域，**不會有 CORS 問題**。
 
 ### 4.7 網頁：`app/static/index.html`
@@ -686,9 +718,14 @@ function renderMessage(message) {
 }
 
 async function loadMessages() {
-  const res = await fetch('/api/messages')
-  const { data } = await res.json()
-  list.replaceChildren(...data.map(renderMessage))
+  try {
+    const res = await fetch('/api/messages')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { data } = await res.json()
+    list.replaceChildren(...data.map(renderMessage))
+  } catch {
+    formError.textContent = '留言載入失敗，請重新整理頁面'
+  }
 }
 
 form.addEventListener('submit', async (event) => {
@@ -720,6 +757,7 @@ loadMessages()
 - `new FormData(form)`：把整個表單（含檔案）打包，瀏覽器會自動用 `multipart/form-data` 送出。
 - 送出時 `button.disabled = true`：避免連按兩次發兩篇。`finally` 確保不管成功失敗都會恢復。
 - 成功後 `list.prepend(...)`：直接把新留言加在最上面，不用重新抓整個列表。
+- `loadMessages` 也包 `try/catch`：伺服器掛掉時頁面會顯示「留言載入失敗」，而不是一片空白讓人以為沒有留言。
 - `image.loading = 'lazy'`：圖片捲到附近才載入。
 
 ### 4.10 建資料表：`schema.sql`
@@ -960,6 +998,9 @@ def client(engine, s3):
 ```python
 from unittest.mock import patch
 
+from fastapi.testclient import TestClient
+
+from app.main import app
 from tests.conftest import BUCKET
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
@@ -1038,6 +1079,24 @@ def test_db_failure_removes_uploaded_image(client, s3):
     assert s3.list_objects_v2(Bucket=BUCKET).get("KeyCount", 0) == 0
 
 
+def test_malformed_request_uses_error_format(client):
+    # image 用一般文字欄位送，不是檔案 → FastAPI 驗證失敗
+    res = client.post("/api/messages", data={"content": "哈囉", "image": "not-a-file"})
+    assert res.status_code == 400
+    assert res.json()["error"] == "invalid_request"
+
+
+def test_list_db_failure_uses_error_format(client):
+    # 預設 TestClient 會把伺服器例外直接丟出來；這裡要看真正回給使用者的回應
+    safe_client = TestClient(app, raise_server_exceptions=False)
+    with patch("app.database.list_messages", side_effect=RuntimeError("db down")):
+        res = safe_client.get("/api/messages")
+
+    assert res.status_code == 500
+    assert res.json() == {"error": "internal_error", "message": "伺服器發生錯誤，請稍後再試"}
+    assert "db down" not in res.text
+
+
 def test_index_page_served(client):
     res = client.get("/")
     assert res.status_code == 200
@@ -1056,7 +1115,7 @@ ruff format .         # 自動排版
 pytest                # 跑測試
 ```
 
-應該看到 `All checks passed!` 和 `11 passed`。CI 會跑一模一樣的指令。
+應該看到 `All checks passed!` 和 `13 passed`。CI 會跑一模一樣的指令。
 
 ---
 

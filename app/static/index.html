@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>圖文留言板</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <h1>發表一篇圖文</h1>
+    <form id="message-form">
+      <label>文字內容 <input name="content" maxlength="1000" required /></label>
+      <label>圖片檔案 <input name="image" type="file" accept="image/*" required /></label>
+      <button type="submit">送出</button>
+      <p id="form-error" class="error" role="alert"></p>
+    </form>
+    <hr />
+    <ul id="message-list"></ul>
+    <script src="/app.js"></script>
+  </body>
+</html>

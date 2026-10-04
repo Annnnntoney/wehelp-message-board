@@ -29,18 +29,18 @@
 
 ## 10/6（二）API
 
-- [ ] `app/config.py`：讀 `.env`
+- [x] `app/config.py`：讀 `.env`
 - [ ] `schema.sql`，從 EC2 連 RDS 建表
-- [ ] `app/storage.py`：boto3 上傳 S3、組 CloudFront 網址
-- [ ] `app/database.py`：新增、列出（新到舊）
-- [ ] `POST /api/messages`、`GET /api/messages`，錯誤格式照 API 契約
-- [ ] 把 `boto3`、`python-multipart`、DB driver 加進 `requirements.txt`；`moto` 加進 dev
+- [x] `app/storage.py`：boto3 上傳 S3、組 CloudFront 網址
+- [x] `app/database.py`：新增、列出（新到舊）
+- [x] `POST /api/messages`、`GET /api/messages`，錯誤格式照 API 契約
+- [x] 把 `boto3`、`python-multipart`、DB driver 加進 `requirements.txt`；`moto` 加進 dev
 
 ## 10/7（三）頁面與測試
 
-- [ ] `app/static/index.html`：「發表一篇圖文」表單 + 列表，送出後新留言在最上面
-- [ ] 測試：驗證規則、`POST` 成功／4xx、`GET` 排序、DB 失敗時刪 S3 物件（moto + SQLite）
-- [ ] 本機 `docker build` + `docker run --env-file .env` 跑通（連真 AWS）
+- [x] `app/static/index.html`：「發表一篇圖文」表單 + 列表，送出後新留言在最上面
+- [x] 測試：驗證規則、`POST` 成功／4xx、`GET` 排序、DB 失敗時刪 S3 物件（moto + SQLite）
+- [x] 本機 `docker build`（linux/amd64）+ `docker run` 跑通（模擬模式）；連真 AWS 待 EC2 上驗證
 
 ## 10/8（四）部署
 
@@ -54,7 +54,7 @@
 
 - [ ] README 補線上網址、截圖
 - [ ] 私訊講師：網域網址 + GitHub repo 連結
-- [ ] repo 若是 private，記得把講師加成 collaborator
+- [x] repo 是 public，講師可直接看
 
 ## 本週驗收
 
