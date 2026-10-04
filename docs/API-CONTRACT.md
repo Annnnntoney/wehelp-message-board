@@ -52,6 +52,7 @@ image=<檔案>
 | ------ | -------------------- | ---------------------------- |
 | 400    | `invalid_content`    | 文字空白或超過 1000 字       |
 | 400    | `image_required`     | 沒附圖片                     |
+| 400    | `invalid_request`    | 請求格式錯誤（例如 `image` 不是檔案） |
 | 413    | `image_too_large`    | 超過大小上限                 |
 | 415    | `unsupported_image`  | 不是允許的圖片格式           |
 | 502    | `upload_failed`      | S3 上傳失敗                  |
@@ -61,7 +62,7 @@ image=<檔案>
 { "error": "image_too_large", "message": "圖片不能超過 5MB" }
 ```
 
-FastAPI 預設的 422 驗證錯誤要用 exception handler 轉成上面的 400 格式。5xx 不回傳 AWS 錯誤細節、bucket 名稱或連線字串。
+FastAPI 預設的 422 驗證錯誤已由 exception handler 轉成 400 `invalid_request`；任何未預期錯誤（含 `GET` 時資料庫失敗）統一回 500 `internal_error`。5xx 不回傳 AWS 錯誤細節、bucket 名稱或連線字串。
 
 ## `GET /api/messages`
 

@@ -1,5 +1,8 @@
 from unittest.mock import patch
 
+from fastapi.testclient import TestClient
+
+from app.main import app
 from tests.conftest import BUCKET
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
@@ -76,6 +79,24 @@ def test_db_failure_removes_uploaded_image(client, s3):
     assert res.json()["error"] == "internal_error"
     assert "db down" not in res.text
     assert s3.list_objects_v2(Bucket=BUCKET).get("KeyCount", 0) == 0
+
+
+def test_malformed_request_uses_error_format(client):
+    # image 用一般文字欄位送，不是檔案 → FastAPI 驗證失敗
+    res = client.post("/api/messages", data={"content": "哈囉", "image": "not-a-file"})
+    assert res.status_code == 400
+    assert res.json()["error"] == "invalid_request"
+
+
+def test_list_db_failure_uses_error_format(client):
+    # 預設 TestClient 會把伺服器例外直接丟出來；這裡要看真正回給使用者的回應
+    safe_client = TestClient(app, raise_server_exceptions=False)
+    with patch("app.database.list_messages", side_effect=RuntimeError("db down")):
+        res = safe_client.get("/api/messages")
+
+    assert res.status_code == 500
+    assert res.json() == {"error": "internal_error", "message": "伺服器發生錯誤，請稍後再試"}
+    assert "db down" not in res.text
 
 
 def test_index_page_served(client):

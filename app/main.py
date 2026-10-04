@@ -1,13 +1,21 @@
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
-from app.errors import AppError, app_error_handler
+from app.errors import (
+    AppError,
+    app_error_handler,
+    unexpected_error_handler,
+    validation_error_handler,
+)
 from app.messages import router as messages_router
 
 app = FastAPI(title="message-board")
 app.add_exception_handler(AppError, app_error_handler)
+app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(Exception, unexpected_error_handler)
 app.include_router(messages_router)
 
 

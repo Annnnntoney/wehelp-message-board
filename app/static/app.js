@@ -19,9 +19,14 @@ function renderMessage(message) {
 }
 
 async function loadMessages() {
-  const res = await fetch('/api/messages')
-  const { data } = await res.json()
-  list.replaceChildren(...data.map(renderMessage))
+  try {
+    const res = await fetch('/api/messages')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { data } = await res.json()
+    list.replaceChildren(...data.map(renderMessage))
+  } catch {
+    formError.textContent = '留言載入失敗，請重新整理頁面'
+  }
 }
 
 form.addEventListener('submit', async (event) => {
