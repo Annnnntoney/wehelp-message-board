@@ -11,6 +11,7 @@
 - [ ] `ruff check .`、`ruff format --check .`、`pytest` 本機過
 - [ ] 改到 Dockerfile 或依賴時，本機 `docker build` 過
 - [ ] 沒有把 `.env`、AWS key、DB 密碼 commit 進來
+- [ ] Sourcery 的審查意見已處理或回覆
 
 ## API 有變動時附上
 

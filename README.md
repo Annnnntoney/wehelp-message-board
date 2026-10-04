@@ -8,7 +8,7 @@ WeHelp 最後階段第一週後端任務：圖文留言板（AWS S3 + CloudFront
 | ------ | ------------------------------ |
 | 線上   | （網域設好後填入）             |
 | 本機   | http://localhost:8000          |
-| 原始碼 | （建好 GitHub repo 後填入）    |
+| 原始碼 | https://github.com/Annnnntoney/wehelp-message-board |
 
 ## 技術
 
@@ -65,6 +65,19 @@ uvicorn app.main:app --reload
 | `pytest`              | 測試            |
 | `docker build -t message-board .` | 建 image |
 | `docker run -p 8000:8000 --env-file .env message-board` | 本機跑 container |
+
+## AI Code Review
+
+PR 由 [Sourcery](https://sourcery.ai)（GitHub App，public repo 免費）自動審查，設定在 [.sourcery.yaml](./.sourcery.yaml)。
+
+| 在 PR 留言            | 作用                     |
+| --------------------- | ------------------------ |
+| `@sourcery-ai review` | 重新審查                 |
+| `@sourcery-ai summary`| 產生 PR 摘要             |
+| `@sourcery-ai guide`  | 產生審查者指南           |
+| `@sourcery-ai resolve`| 標記所有 Sourcery 評論已處理 |
+
+不想被審查的 PR 加上 `sourcery-ignore` label。
 
 ## 文件
 
