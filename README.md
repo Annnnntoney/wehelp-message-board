@@ -6,7 +6,7 @@ WeHelp 最後階段第一週後端任務：圖文留言板（AWS S3 + CloudFront
 
 | 環境   | 連結                           |
 | ------ | ------------------------------ |
-| 線上   | （網域設好後填入）             |
+| 線上   | http://board.antoney.com（部署後啟用） |
 | 本機   | http://localhost:8000          |
 | 原始碼 | https://github.com/Annnnntoney/wehelp-message-board |
 
