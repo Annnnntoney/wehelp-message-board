@@ -1,0 +1,79 @@
+name: Deploy
+
+# CI 在 main 跑綠之後才部署；也可以在 Actions 頁面手動觸發。
+# 在 repo Settings → Variables 設 DEPLOY_ENABLED=true 才會真的執行，
+# 設定步驟見 docs/CICD.md#3-cd-docker-hub--ec2。
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/wehelp-message-board
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  image:
+    name: Build & push image
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.SHA }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to EC2
+    needs: image
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    steps:
+      - name: SSH 進 EC2：pull → 換 container
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: IMAGE,SHA
+          script: |
+            set -e
+            docker pull "$IMAGE:$SHA"
+            docker rm -f message-board 2>/dev/null || true
+            docker run -d --name message-board --restart always \
+              -p 80:8000 --env-file "$HOME/message-board/.env" \
+              "$IMAGE:$SHA"
+            docker image prune -f
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "${{ vars.APP_URL }}/healthz"; then exit 0; fi
+            sleep 2
+          done
+          echo "::error::部署後 /healthz 沒回應，用上一個 image tag 回滾（docs/CICD.md#回滾）"
+          exit 1

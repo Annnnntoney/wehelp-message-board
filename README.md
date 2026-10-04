@@ -1,0 +1,76 @@
+# message-board
+
+WeHelp 最後階段第一週後端任務：圖文留言板（AWS S3 + CloudFront + RDS，用 Docker 部署到 EC2）。
+
+## 網站
+
+| 環境   | 連結                           |
+| ------ | ------------------------------ |
+| 線上   | （網域設好後填入）             |
+| 本機   | http://localhost:8000          |
+| 原始碼 | （建好 GitHub repo 後填入）    |
+
+## 技術
+
+| 項目     | 選擇                                       |
+| -------- | ------------------------------------------ |
+| 語言     | Python 3.12（Docker／CI）；本機 ≥ 3.10 可跑 |
+| 框架     | FastAPI + Uvicorn                          |
+| 資料庫   | AWS RDS for MySQL                          |
+| 圖片     | AWS S3（boto3）+ CloudFront CDN            |
+| 部署     | Docker image → Docker Hub → EC2            |
+| 網域     | GoDaddy 或 Cloudflare，A 紀錄指向 EC2      |
+
+## 架構
+
+```
+上傳：使用者 ──▶ Web App（EC2 / Docker）──▶ S3（圖片）
+                                       └──▶ RDS（文字 + image_key）
+
+讀取：使用者 ◀── Web App ◀── RDS
+      使用者 ◀── CloudFront ◀── S3（圖片不經過 Web App）
+```
+
+## 檔案規劃
+
+| 路徑                 | 內容                                    |
+| -------------------- | --------------------------------------- |
+| `app/main.py`        | FastAPI app、路由註冊、`/healthz`       |
+| `app/config.py`      | 讀環境變數                              |
+| `app/db.py`          | RDS 連線、`messages` 表存取             |
+| `app/storage.py`     | 上傳 S3、組 CloudFront 網址             |
+| `app/routers/messages.py` | `GET`／`POST /api/messages`        |
+| `app/static/index.html` | 留言板頁面（表單 + 列表）            |
+| `schema.sql`         | 建表 SQL                                |
+| `tests/`             | pytest（S3 用 moto mock、DB 用 SQLite） |
+
+目前只有 `app/main.py` 的 `/healthz`，其餘照 [TODO.md](./TODO.md) 補。
+
+## 本機
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env        # 填 RDS／S3／CloudFront
+uvicorn app.main:app --reload
+```
+
+| 指令                  | 用途            |
+| --------------------- | --------------- |
+| `ruff check .`        | Lint            |
+| `ruff format .`       | 格式化          |
+| `pytest`              | 測試            |
+| `docker build -t message-board .` | 建 image |
+| `docker run -p 8000:8000 --env-file .env message-board` | 本機跑 container |
+
+## 文件
+
+- 任務規格：[docs/SPEC.md](./docs/SPEC.md)
+- API 契約：[docs/API-CONTRACT.md](./docs/API-CONTRACT.md)
+- CI/CD 計劃：[docs/CICD.md](./docs/CICD.md)
+- 待辦與排程：[TODO.md](./TODO.md)
+
+## 繳交
+
+Docker 部署上線後私訊講師：**上線網址（自己的網域）** + **GitHub Repository 連結**。
