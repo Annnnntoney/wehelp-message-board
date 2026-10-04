@@ -65,7 +65,7 @@ FastAPI 預設的 422 驗證錯誤要用 exception handler 轉成上面的 400 �
 
 ## `GET /api/messages`
 
-列出所有留言，依 `createdAt` **新到舊**（剛送出的在最上面）。
+列出所有留言，**新到舊**（剛送出的在最上面；後端依 `id DESC` 排序，同一秒送出的也不會亂）。
 
 ### 成功（200）
 
@@ -89,7 +89,7 @@ FastAPI 預設的 422 驗證錯誤要用 exception handler 轉成上面的 400 �
 ```
 
 - 沒有留言時回 `{ "data": [] }`。
-- `imageUrl` 由 `CLOUDFRONT_DOMAIN` + DB 裡的 `image_key` 組成，不回傳 S3 網址。
+- `imageUrl` 由 `CDN_BASE_URL` + DB 裡的 `image_key` 組成，不回傳 S3 網址。
 - `createdAt` 為 UTC 的 ISO 8601，頁面自行轉台灣時間。
 - 第一週不分頁；留言多了再加 `?limit=&before=`。
 
@@ -100,8 +100,7 @@ CREATE TABLE IF NOT EXISTS messages (
   id          BIGINT AUTO_INCREMENT PRIMARY KEY,
   content     VARCHAR(1000) NOT NULL,
   image_key   VARCHAR(255)  NOT NULL,
-  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_created_at (created_at)
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) DEFAULT CHARSET = utf8mb4;
 ```
 

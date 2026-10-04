@@ -1,6 +1,6 @@
 # 後端待辦：message-board
 
-規格見 [docs/SPEC.md](./docs/SPEC.md)，API 見 [docs/API-CONTRACT.md](./docs/API-CONTRACT.md)，CI/CD 見 [docs/CICD.md](./docs/CICD.md)。
+**照著做：[docs/TUTORIAL.md](./docs/TUTORIAL.md)**（零基礎完整教學）。規格見 [docs/SPEC.md](./docs/SPEC.md)，API 見 [docs/API-CONTRACT.md](./docs/API-CONTRACT.md)，CI/CD 見 [docs/CICD.md](./docs/CICD.md)。
 
 > 簡報沒寫第一週的繳交期限。先抓 **10/9（五）交**，留週末準備 10/12 的個人專案期初報告；確認期限後再調。
 > AWS 設定（網域生效、RDS 建立）要等，所以排在前面跟寫程式並行。
@@ -15,7 +15,7 @@
 - [x] README、API 契約、CI/CD 計劃、PR template
 - [x] `git init` + 第一個 commit
 - [ ] GitHub 建 repo，push `main`，確認 CI 綠燈
-- [ ] **買網域**（GoDaddy／Cloudflare），DNS 生效需要時間，先買
+- [x] **買網域**：Cloudflare `antoney.com`，留言板用 `board.antoney.com`
 - [ ] AWS：開 Billing alarm（例如 US$5），確認用的是 Free Tier 規格
 
 ## 10/5（一）AWS 資源
@@ -23,7 +23,7 @@
 - [ ] S3 bucket：Block all public access
 - [ ] CloudFront distribution：Origin = 該 bucket，用 OAC；記下 `dxxxx.cloudfront.net`
 - [ ] RDS MySQL（Free Tier、不開 Public access），Security Group 只允許 EC2 的 SG
-- [ ] EC2（AL2023 或 Ubuntu）、Elastic IP、IAM Role（`s3:PutObject`／`s3:DeleteObject`）、metadata hop limit = 2
+- [ ] EC2（Amazon Linux 2023、t3.micro）、Elastic IP、IAM Role（`s3:PutObject`／`s3:DeleteObject`）、metadata hop limit = 2
 - [ ] EC2 裝 Docker，建 `~/message-board/.env`
 - [ ] 網域 A 紀錄 → Elastic IP
 
@@ -32,7 +32,7 @@
 - [ ] `app/config.py`：讀 `.env`
 - [ ] `schema.sql`，從 EC2 連 RDS 建表
 - [ ] `app/storage.py`：boto3 上傳 S3、組 CloudFront 網址
-- [ ] `app/db.py`：新增、列出（新到舊）
+- [ ] `app/database.py`：新增、列出（新到舊）
 - [ ] `POST /api/messages`、`GET /api/messages`，錯誤格式照 API 契約
 - [ ] 把 `boto3`、`python-multipart`、DB driver 加進 `requirements.txt`；`moto` 加進 dev
 

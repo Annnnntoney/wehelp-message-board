@@ -37,14 +37,16 @@ WeHelp 最後階段第一週後端任務：圖文留言板（AWS S3 + CloudFront
 | -------------------- | --------------------------------------- |
 | `app/main.py`        | FastAPI app、路由註冊、`/healthz`       |
 | `app/config.py`      | 讀環境變數                              |
-| `app/db.py`          | RDS 連線、`messages` 表存取             |
+| `app/errors.py`      | 統一錯誤格式                            |
+| `app/database.py`    | RDS 連線、`messages` 表存取             |
 | `app/storage.py`     | 上傳 S3、組 CloudFront 網址             |
-| `app/routers/messages.py` | `GET`／`POST /api/messages`        |
-| `app/static/index.html` | 留言板頁面（表單 + 列表）            |
+| `app/messages.py`    | `GET`／`POST /api/messages`             |
+| `app/static/`        | 留言板頁面（表單 + 列表）               |
+| `scripts/dev_setup.py` | 本機模擬模式初始化（SQLite + 假 S3）  |
 | `schema.sql`         | 建表 SQL                                |
 | `tests/`             | pytest（S3 用 moto mock、DB 用 SQLite） |
 
-目前只有 `app/main.py` 的 `/healthz`，其餘照 [TODO.md](./TODO.md) 補。
+目前只有 `app/main.py` 的 `/healthz`，其餘照 [docs/TUTORIAL.md](./docs/TUTORIAL.md) 和 [TODO.md](./TODO.md) 補。
 
 ## 本機
 
@@ -52,7 +54,7 @@ WeHelp 最後階段第一週後端任務：圖文留言板（AWS S3 + CloudFront
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env        # 填 RDS／S3／CloudFront
+cp .env.local.example .env  # 本機模擬模式，不需要 AWS；細節見 docs/TUTORIAL.md §4.13
 uvicorn app.main:app --reload
 ```
 
@@ -66,6 +68,7 @@ uvicorn app.main:app --reload
 
 ## 文件
 
+- **零基礎教學（從頭到尾）**：[docs/TUTORIAL.md](./docs/TUTORIAL.md)
 - 任務規格：[docs/SPEC.md](./docs/SPEC.md)
 - API 契約：[docs/API-CONTRACT.md](./docs/API-CONTRACT.md)
 - CI/CD 計劃：[docs/CICD.md](./docs/CICD.md)
