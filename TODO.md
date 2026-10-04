@@ -14,7 +14,7 @@
 - [x] CD：`deploy.yml`（Docker Hub → EC2，`DEPLOY_ENABLED` 開關）
 - [x] README、API 契約、CI/CD 計劃、PR template
 - [x] `git init` + 第一個 commit
-- [ ] GitHub 建 repo，push `main`，確認 CI 綠燈
+- [x] GitHub 建 repo，push `main`，確認 CI 綠燈
 - [x] **買網域**：Cloudflare `antoney.com`，留言板用 `board.antoney.com`
 - [ ] AWS：開 Billing alarm（例如 US$5），確認用的是 Free Tier 規格
 

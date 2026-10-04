@@ -1,0 +1,18 @@
+# Sourcery AI code review 設定
+# 文件：https://docs.sourcery.ai/Reference/Configuration/sourcery-yaml/
+version: '1'
+
+# 不需要審查的路徑
+ignore:
+  - .venv/
+  - docs/images/
+
+rule_settings:
+  enable:
+    - default
+  python_version: '3.12'
+
+github:
+  # PR 加上這個 label 就跳過 Sourcery 審查
+  ignore_labels:
+    - sourcery-ignore
